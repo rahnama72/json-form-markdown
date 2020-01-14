@@ -2,16 +2,16 @@ def json_book_chapters_form_markdown(book_object):
     """
 
     Json Book Chapters Creator form Markdown
-    **************************
+    ****************************************
 
     Introduction
-    ============
+    ############
     In this function we focus on getting some markdown content, specify its heading tags,
     and finally create json file from these tags. **So in short we can say we are making
     json file (or object for saving in DB) from markdown text.**
 
     Implementation
-    ==============
+    ##############
     There are few way to convert markdown objects to json files. We use ``BeautifulSoup4`` and
     ``Moratab`` packages to achieve this. This procedure involves the following steps:
         1. Create HTML string from ``Markdown`` content with ``Moratab``.
@@ -50,7 +50,7 @@ def json_book_chapters_form_markdown(book_object):
 
     # Make a list of chapters in their original order.
     # Each item in this list is a dictionary of "tag name":"tag value".
-    data = []
+    primary_chapter_list = []
     for item in h_tags_list:
         temp_dict = {}
         if h1_tag_pattern.match(str(item)):
@@ -59,46 +59,46 @@ def json_book_chapters_form_markdown(book_object):
             temp_dict['h2'] = item.text
         if h3_tag_pattern.match(str(item)):
             temp_dict['h3'] = item.text
-        data.append(temp_dict)
+        primary_chapter_list.append(temp_dict)
 
     # Make dictionary of all chapters that contains tree of tags.
-    book_chapters = {}
-    final_list = []
-    for item in reversed(data):
-        h1_dict = {}
+    final_book_chapters = {}
+    final_h1_list = []
+    for item in reversed(primary_chapter_list):
+        primary_h1_dict = {}
         for key in item:
             if h1_pattern.match(key):
-                h1_list = data[data.index(item):]
-                data[data.index(item):] = []
+                primary_h1_list = primary_chapter_list[primary_chapter_list.index(item):]
+                primary_chapter_list[primary_chapter_list.index(item):] = []
                 final_h2_list = []
-                for item in reversed(h1_list):
+                for item in reversed(primary_h1_list):
                     for key, value in item.items():
                         if h2_pattern.match(key):
-                            h2_list = h1_list[h1_list.index(item):]
-                            h1_list[h1_list.index(item):] = []
-                            h2_dict = {}
-                            h3_list = []
-                            if len(h2_list) == 1:
-                                h2_dict.update({"title": h2_list[0]})
-                                h2_dict.update({"h3s": []})
+                            primary_h2_list = primary_h1_list[primary_h1_list.index(item):]
+                            primary_h1_list[primary_h1_list.index(item):] = []
+                            primary_h2_dict = {}
+                            primary_h3_list = []
+                            if len(primary_h2_list) == 1:
+                                primary_h2_dict.update({"title": primary_h2_list[0]})
+                                primary_h2_dict.update({"h3s": []})
                             else:
-                                for item in reversed(h2_list[1:]):
+                                for item in reversed(primary_h2_list[1:]):
                                     for key, value in item.items():
                                         if h3_pattern.match(key):
-                                            h3_list.append(item)
-                                            h2_list[h2_list.index(item):] = []
-                                            h3_list.reverse()
-                                            h2_dict.update({"title": h2_list[0]})
-                                            h2_dict.update({"h3s": h3_list})
-                            final_h2_list.append(dict(h2_dict))
-                            h2_dict.clear()
+                                            primary_h3_list.append(item)
+                                            primary_h2_list[primary_h2_list.index(item):] = []
+                                            primary_h3_list.reverse()
+                                            primary_h2_dict.update({"title": primary_h2_list[0]})
+                                            primary_h2_dict.update({"h3s": primary_h3_list})
+                            final_h2_list.append(dict(primary_h2_dict))
+                            primary_h2_dict.clear()
                 final_h2_list.reverse()
-                h1_dict.update(({"title": h1_list[0]}))
-                h1_dict.update(({"h2s": final_h2_list}))
-                final_list.append(dict(h1_dict))
-                h1_dict.clear()
-    final_list.reverse()
-    book_chapters.update({"title": book_object.title})
-    book_chapters.update({"h1s": final_list})
+                primary_h1_dict.update(({"title": primary_h1_list[0]}))
+                primary_h1_dict.update(({"h2s": final_h2_list}))
+                final_h1_list.append(dict(primary_h1_dict))
+                primary_h1_dict.clear()
+    final_h1_list.reverse()
+    final_book_chapters.update({"title": book_object.title})
+    final_book_chapters.update({"h1s": final_h1_list})
 
-    return book_chapters
+    return final_book_chapters
